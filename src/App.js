@@ -8,22 +8,30 @@ class BooksApp extends React.Component {
   /**
    * Getting the books from the server
    */
+
+  setShelfState = (books) => {
+    this.setState({
+      currentlyReading: books.filter(
+        (book) => book.shelf === "currentlyReading"
+      ),
+      wantToRead: books.filter(
+        (book) => book.shelf === "wantToRead"
+      ),
+      read: books.filter((book) => book.shelf === "read"),
+    });
+  }
   init = async () => {
     this.setState({
       loadBooks: await BooksAPI.getAll(),
     });
 
-    this.setState({
-      currentlyReading: this.state.loadBooks.filter(
-        (book) => book.shelf === "currentlyReading"
-      ),
-      wantToRead: this.state.loadBooks.filter(
-        (book) => book.shelf === "wantToRead"
-      ),
-      read: this.state.loadBooks.filter((book) => book.shelf === "read"),
-    });
+    this.setShelfState(this.state.loadBooks)
+    
   };
-  // constructor(){}
+
+  /**
+   * Setting the initial values vor the loadBooks and the shelfStates arrays
+   */
   componentDidMount() {
     this.init();
   }
@@ -40,9 +48,21 @@ class BooksApp extends React.Component {
    * @param {*} response
    */
   updateShelf = (response) => {
-    console.log(`From App: ${response}`);
-    this.init();
+    if (!response.error) {
+      let updatedBooks = this.state.loadBooks.map(book => {
+        if (book.id === response.data.book.id) {
+          book.shelf = response.data.book.shelf
+          console.log(book)
+        }
+        return book;
+      })
+      this.setState({
+        loadBooks: updatedBooks
+      })
+      this.setShelfState(updatedBooks);
+    }
   };
+
   render() {
     return (
       <div className="app">

@@ -19,23 +19,24 @@ export default class BookCard extends Component {
      * @returns {object} data
      */
     handle = e => {
+        let updatedBook = {
+            ...this.props.book,
+            shelf: e.target.value
+        }
         this.setState({
-            book: {
-                ...this.props.book,
-                shelf: e.target.value
-            }
+            book: updatedBook
         });
         BookAPI.update(this.props.book, e.target.value)
-            .then(data => {
-                Swal.fire({
-                    title: `Book Update`,
-                    text: `You repository is updated`,
-                    icon: 'success'
-                });
-                this.props.selectHandler({
+        .then(data => {
+            Swal.fire({
+                title: `Book Update`,
+                text: `You repository is updated`,
+                icon: 'success'
+            });
+            this.props.selectHandler({
                     error: false,
                     data: {
-                        book: this.props.book,
+                        book: updatedBook,
                         data: data
                     }
                 })
@@ -72,12 +73,3 @@ export default class BookCard extends Component {
   }
   
 }
-
-// BookCard.propType = {
-//     selectHandler: PropTypes.func.isRequired,
-//     book: PropTypes.exact({
-//         title: PropTypes.string.isRequired,
-//         authors: PropTypes.string.isRequired,
-//         imageLinks: PropTypes.object.isRequired
-//     }),
-// }

@@ -2,14 +2,20 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router-dom'
 import BookCard from './BookCard'
-import * as BooksAPI from '../BooksAPI'
+import { getAll, search } from '../BooksAPI'
 
 export default class SearchBook extends Component {
     //   static propTypes = {second: third}
+    async componentDidMount() {
+        this.setState({
+            books: await getAll()
+        })
+    }
 
     state = {
         query: '',
-        searchedBooks: []
+        searchedBooks: [],
+        books: []
     }
 
     selectHandler = (response) => {
@@ -26,8 +32,8 @@ export default class SearchBook extends Component {
         this.setState({
             query: event.target.value,
         })
-
-        this.getBooks(this.state.query)
+        
+        this.state.query !== '' && this.getBooks(this.state.query)
 
     }
 
@@ -39,15 +45,21 @@ export default class SearchBook extends Component {
         try {
             if (query) {
 
-                BooksAPI.search(query).then(data => {
+                search(query).then(data => {
 
                     if (typeof (data.error) !== 'undefined') {
                         this.setState({
                             searchedBooks: []
                         })
                     } else {
+                        let { books } = this.state;
+                        let noneBooks = this.equalElements(data, books, false);
+                        let sheltedBooks = this.equalElements(data, books, true);
+                        
+                        noneBooks.map(book => book.shelf = 'none')
+                        
                         this.setState({
-                            searchedBooks: data
+                            searchedBooks: [...sheltedBooks,...noneBooks]
                         })
                     }
                 }).catch(error => {
@@ -66,26 +78,44 @@ export default class SearchBook extends Component {
 
     }
 
+    /**
+     * 
+     * @param {Array} firstArray 
+     * @param {Array} secondArray 
+     * @param {Boolean} value 
+     * @returns
+     * @copyright Borislav Hadzhiev 
+     * @version Getting Difference between two Array of Objects in JavaScript
+     * @link https://bobbyhadz.com/blog/javascript-get-diference-between-two-arrays-of-objects
+     */
+    equalElements = (firstArray, secondArray, value) => {
+        return firstArray.filter(book => {
+            if (value) {
+                return secondArray.some(searchBook => {
+                    book.shelf = searchBook.shelf;
+                    return searchBook.id === book.id
+                })
+            } else {
+                return !secondArray.some(searchBook => {
+                    book.shelf = searchBook.shelf;
+                    return searchBook.id === book.id
+                }) 
+            }
+        })
+    }
+
     render() {
         return (
             <div className="search-books">
                 <div className="search-books-bar">
                     <Link to="/" className="close-search">Close</Link>
                     <div className="search-books-input-wrapper">
-                        {/*
-        NOTES: The search from BooksAPI is limited to a particular set of search terms.
-        You can find these search terms here:
-        https://github.com/udacity/reactnd-project-myreads-starter/blob/master/SEARCH_TERMS.md
-    
-        However, remember that the BooksAPI.search method DOES search by title or author. So, don't worry if
-        you don't find a specific author or title. Every search is limited by search terms.
-    */}
                         <input type="text" placeholder="Search by title or author" onChange={this.inputChange} value={this.state.query} />
-
                     </div>
                 </div>
                 <div className="search-books-results">
                     <ol className="books-grid">
+                        {console.log(this.state.searchedBooks)}
                         {this.state.searchedBooks.map(book => {
                             return <li key={book.id}><BookCard book={book} selectHandler={this.selectHandler} /></li>
                         })}

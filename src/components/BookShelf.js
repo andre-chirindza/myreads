@@ -15,7 +15,6 @@ export default class BookShelf extends Component {
             <div className="bookshelf-books">
                 <ol className="books-grid">
                     {this.props.listOfBooks.map(book => {
-                        console.log(book.title)
                         return <li key={book.id}>
                             <BookCard book={book} selectHandler={this.props.selectHandler} />
                         </li>
